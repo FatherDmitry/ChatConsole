@@ -17,9 +17,12 @@ internal class ChatServer
         // Запускаем TCP-сервер на указанном порту
         listener = new TcpListener(IPAddress.Any, port);
         listener.Start();
-        Console.WriteLine($"Сервер запущен на порту {port}");
 
-        // Бесконечный цикл ожидания клиентов
+        // Получение IP-адреса сервера
+        string localIPs = string.Join(", ", GetLocalIPv4Addresses());
+        Console.WriteLine($"Сервер запущен по IP: {localIPs}:{port}");
+
+        // Цикл ожидания клиентов
         while (true)
         {
             // Приняте входящего соединения от клиента
@@ -37,6 +40,22 @@ internal class ChatServer
             thread.Start();
         }
     }
+
+
+    // Метод для получения IPv4-текущей машины
+    private static List<string> GetLocalIPv4Addresses()
+    {
+        List<string> addresses = new List<string>();
+
+        foreach (var ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList) // Получение IP-адреса устройства
+        {
+            // Фильтрация только IPv4-адресов
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+                addresses.Add(ip.ToString());
+        }
+        return addresses;
+    }
+
 
     // Метод для рассылки сообщений всем клиентам
     public static void Broadcast(string message, ClientHandler exclude = null)
@@ -62,11 +81,10 @@ internal class ChatServer
             }
         }
 
-        // Вывод сообщения на серверную консоль
-        Console.WriteLine(message);
+        Console.WriteLine(message); // Вывод сообщения на серверную консоль
     }
 
-    // Удаление клиента из общего списка
+    // Удаление клиента из общего списка (отключение клиента)
     public static void RemoveClient(ClientHandler client)
     {
         lock (clients)

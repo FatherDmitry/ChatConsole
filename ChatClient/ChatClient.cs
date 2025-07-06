@@ -6,16 +6,29 @@ internal class ChatClient
     static TcpClient client;           // TCP-клиент для подключения к серверу
     static NetworkStream stream;       // Поток для отправки и получения данных
     static string name;                // Имя пользователя
+    static Thread receiveThread;
 
     static void Main(string[] args)
     {
+        // Запрос IP-сервера
+        Console.Write("Введите IP-адрес сервера (например, 127.0.0.1): ");
+        string serverIp = Console.ReadLine()?.Trim();
+
         // Запрос имени у пользователя для чата
         Console.Write("Введите имя: ");
         name = Console.ReadLine();
 
         // Подключение к серверу
-        client = new TcpClient("127.0.0.1", 5000);
-        stream = client.GetStream();
+        try
+        {
+            client = new TcpClient(serverIp, 5000);
+            stream = client.GetStream();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка подключения: {ex.Message}");
+            return;
+        }
 
         // Отправка имени пользователя серверу
         byte[] data = Encoding.UTF8.GetBytes(name);
@@ -49,6 +62,7 @@ internal class ChatClient
     static void ReceiveMessages()
     {
         byte[] buffer = new byte[1024];
+
         try
         {
             while (true)
