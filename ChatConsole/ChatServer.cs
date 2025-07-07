@@ -127,6 +127,23 @@ internal class ChatServer
 
                     string message = Encoding.UTF8.GetString(buffer, 0, bytes).Trim();
                     ChatServer.Broadcast($"{Name}: {message}", this);
+
+                    if (message == "/users")
+                    {
+                        // Получение списка онлайн пользователей в чате
+                        List<string> userNames;
+                        lock (clients)
+                        {
+                            userNames = clients.Select(c => c.Name).ToList();
+                        }
+
+                        string response = "Онлайн: " + string.Join(", ", userNames);
+
+                        // Отправка списка пользователей запрашиваемому пользователю
+                        byte[] data = Encoding.UTF8.GetBytes(response + "\n");
+                        Stream.Write(data, 0, data.Length);
+                        continue;
+                    }
                 }
             }
             catch
